@@ -1,8 +1,4 @@
-# Remove .venv from git tracking
-git rm -r --cached .venv
-git rm --cached .DS_Store
-
-# Update .gitignore
+# Python
 .venv/
 .DS_Store
 __pycache__/
@@ -10,3 +6,52 @@ __pycache__/
 .pytest_cache/
 .env
 dist/
+
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+*.iml
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+
+# Android
+android/.gradle/
+android/captures/
+android/gradlew
+android/gradlew.bat
+android/local.properties
+android/key.properties
+*.jks
+*.keystore
+
+# macOS
+macos/Pods/
+macos/.symlinks/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+*.env
+
+# Generated
+*.g.dart
+*.freezed.dart
+coverage/
