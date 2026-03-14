@@ -1,0 +1,12 @@
+# Remove .venv from git tracking
+git rm -r --cached .venv
+git rm --cached .DS_Store
+
+# Update .gitignore
+.venv/
+.DS_Store
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+dist/
