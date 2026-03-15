@@ -4,12 +4,22 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/problem.dart';
 
 class ApiService {
-  // Local: http://YOUR_MAC_IP:8000
-  // Production: your Railway URL (https://...)
   static const String baseUrl = 'https://cheatcode-production-498b.up.railway.app';
-  static const String _cachedFeedKey = 'cached_feed';
-  static const String _cacheTimestampKey = 'cache_timestamp';
-  static const int _cacheDurationHours = 24;
+
+  // Passed via --dart-define=API_KEY=xxx at build time
+  // Empty string in debug builds — key check is disabled on server in development
+  static const String _apiKey = String.fromEnvironment('API_KEY', defaultValue: '');
+
+  static Map<String, String> get _headers => {
+    'Content-Type': 'application/json',
+    if (_apiKey.isNotEmpty) 'X-API-Key': _apiKey,
+  };
+
+  static const String _cacheDurationHours = 'cache_duration_hours';
+  static const int _cacheHours = 24;
+
+  static String _feedCacheKey(String userId) => 'cached_feed_$userId';
+  static String _feedTimestampKey(String userId) => 'cache_timestamp_$userId';
 
   // ── User ──────────────────────────────────────────────────────────────────
 
@@ -26,7 +36,7 @@ class ApiService {
   }) async {
     final response = await http.post(
       Uri.parse('$baseUrl/users/'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers,
       body: jsonEncode({
         'email': email,
         'role': role,
@@ -53,6 +63,7 @@ class ApiService {
   static Future<String> _getUserByEmail(String email) async {
     final response = await http.get(
       Uri.parse('$baseUrl/users/by-email/$email'),
+      headers: _headers,
     );
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -64,12 +75,12 @@ class ApiService {
   // ── Feed ──────────────────────────────────────────────────────────────────
 
   static Future<List<Problem>> getFeed(String userId) async {
-    final cached = await _getCachedFeed();
+    final cached = await _getCachedFeed(userId);
     if (cached != null) return cached;
 
     final response = await http.get(
       Uri.parse('$baseUrl/feed/$userId'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers,
     );
 
     if (response.statusCode == 200) {
@@ -77,34 +88,43 @@ class ApiService {
       final problems = (data['problems'] as List)
           .map((p) => Problem.fromJson(p))
           .toList();
-      await _cacheFeed(response.body);
+      await _cacheFeed(userId, response.body);
       return problems;
     }
 
     throw Exception('Failed to fetch feed: ${response.body}');
   }
 
-  static Future<List<Problem>?> _getCachedFeed() async {
+  static Future<List<Problem>?> _getCachedFeed(String userId) async {
     final prefs = await SharedPreferences.getInstance();
-    final timestamp = prefs.getInt(_cacheTimestampKey);
-    final cached = prefs.getString(_cachedFeedKey);
+    final timestamp = prefs.getInt(_feedTimestampKey(userId));
+    final cached = prefs.getString(_feedCacheKey(userId));
     if (timestamp == null || cached == null) return null;
     final age = DateTime.now().millisecondsSinceEpoch - timestamp;
-    if (age > _cacheDurationHours * 60 * 60 * 1000) return null;
+    if (age > _cacheHours * 60 * 60 * 1000) return null;
     final data = jsonDecode(cached);
     return (data['problems'] as List).map((p) => Problem.fromJson(p)).toList();
   }
 
-  static Future<void> _cacheFeed(String rawJson) async {
+  static Future<void> _cacheFeed(String userId, String rawJson) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_cachedFeedKey, rawJson);
-    await prefs.setInt(_cacheTimestampKey, DateTime.now().millisecondsSinceEpoch);
+    await prefs.setString(_feedCacheKey(userId), rawJson);
+    await prefs.setInt(
+        _feedTimestampKey(userId), DateTime.now().millisecondsSinceEpoch);
   }
 
-  static Future<void> clearFeedCache() async {
+  static Future<void> clearFeedCache([String? userId]) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_cachedFeedKey);
-    await prefs.remove(_cacheTimestampKey);
+    if (userId != null) {
+      await prefs.remove(_feedCacheKey(userId));
+      await prefs.remove(_feedTimestampKey(userId));
+    } else {
+      final keys = prefs.getKeys().where((k) =>
+          k.startsWith('cached_feed_') || k.startsWith('cache_timestamp_'));
+      for (final key in keys) {
+        await prefs.remove(key);
+      }
+    }
   }
 
   // ── Answer validation ─────────────────────────────────────────────────────
@@ -116,13 +136,12 @@ class ApiService {
   }) async {
     final response = await http.post(
       Uri.parse('$baseUrl/answers/$userId/validate'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers,
       body: jsonEncode({
         'problem_id': problemId,
         'user_answer': userAnswer,
       }),
     );
-
     if (response.statusCode == 200) return jsonDecode(response.body);
     throw Exception('Validation failed: ${response.body}');
   }
@@ -132,6 +151,7 @@ class ApiService {
   static Future<List<dynamic>> getSolvedToday(String userId) async {
     final response = await http.get(
       Uri.parse('$baseUrl/answers/$userId/solved-today'),
+      headers: _headers,
     );
     if (response.statusCode == 200) return jsonDecode(response.body);
     return [];
@@ -143,6 +163,7 @@ class ApiService {
   }) async {
     await http.post(
       Uri.parse('$baseUrl/answers/$userId/unsolved/$problemId'),
+      headers: _headers,
     );
   }
 
@@ -157,7 +178,7 @@ class ApiService {
   }) async {
     await http.post(
       Uri.parse('$baseUrl/progress/$userId'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers,
       body: jsonEncode({
         'problem_id': problemId,
         'status': status,
@@ -170,6 +191,7 @@ class ApiService {
   static Future<Map<String, dynamic>> getStreak(String userId) async {
     final response = await http.get(
       Uri.parse('$baseUrl/progress/$userId/streak'),
+      headers: _headers,
     );
     if (response.statusCode == 200) return jsonDecode(response.body);
     return {'streak': 0, 'solved_today': 0};

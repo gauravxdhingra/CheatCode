@@ -5,6 +5,7 @@ class Settings(BaseSettings):
     supabase_url: str
     supabase_service_key: str
     app_env: str = "development"
+    api_secret_key: str = ""  # empty = disabled in development
 
     class Config:
         env_file = ".env"

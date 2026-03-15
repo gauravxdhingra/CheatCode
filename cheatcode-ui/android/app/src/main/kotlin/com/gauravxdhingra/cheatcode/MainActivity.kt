@@ -1,4 +1,4 @@
-package com.example.cheatcode
+package com.gauravxdhingra.cheatcode
 
 import io.flutter.embedding.android.FlutterActivity
 
