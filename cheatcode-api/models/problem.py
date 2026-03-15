@@ -32,6 +32,7 @@ class Problem(BaseModel):
     company_badge: str
     pattern: str
     difficulty: int
+    problem_statement: str = ''
     code_lines: list[CodeLine]
     hints: list[str]
     explanation: str

@@ -111,6 +111,7 @@ def _map_to_model(row: dict) -> Problem:
         company_badge=row["company_badge"],
         pattern=row["pattern"],
         difficulty=row["difficulty"],
+        problem_statement=row.get("problem_statement", ""),
         code_lines=row["code_lines"],
         hints=row["hints"],
         explanation=row["explanation"],

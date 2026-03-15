@@ -28,6 +28,7 @@ class Problem {
   final String companyBadge;
   final String pattern;
   final String patternDescription;
+  final String problemStatement;
   final List<String> relatedPatterns;
   final List<CodeLine> codeLines;
   final String explanation;
@@ -46,6 +47,7 @@ class Problem {
     required this.companyBadge,
     required this.pattern,
     this.patternDescription = '',
+    this.problemStatement = '',
     required this.relatedPatterns,
     required this.codeLines,
     required this.explanation,
@@ -75,6 +77,7 @@ class Problem {
       companyBadge: json['company_badge'] as String,
       pattern: json['pattern'] as String,
       patternDescription: json['pattern_description'] as String? ?? '',
+      problemStatement: json['problem_statement'] as String? ?? '',
       relatedPatterns: _parse(json['related_patterns']).map((e) => e as String).toList(),
       codeLines: _parse(json['code_lines'])
           .map((e) => CodeLine.fromJson(e as Map<String, dynamic>))
@@ -90,7 +93,6 @@ class Problem {
     );
   }
 
-  /// Returns [correct, wrong1, wrong2, wrong3] shuffled
   List<String> get multipleChoiceOptions {
     if (wrongOptions.isEmpty) return [];
     final blank = codeLines.firstWhere(

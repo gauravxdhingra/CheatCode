@@ -1,14 +1,13 @@
 from __future__ import annotations
 from fastapi import APIRouter, HTTPException
-from models.problem import AnswerValidation, AnswerResult
+from models.problem import AnswerValidation, AnswerResult, ProblemStatus
 from services.answer_service import (
     validate_answer,
     get_correct_answer,
     get_solved_today,
     mark_unsolved,
 )
-from services.progress_service import update_progress, update_streak
-from models.problem import ProblemStatus
+from services.progress_service import update_progress
 
 router = APIRouter(prefix="/answers", tags=["answers"])
 
@@ -16,12 +15,12 @@ router = APIRouter(prefix="/answers", tags=["answers"])
 @router.post("/{user_id}/validate", response_model=AnswerResult)
 async def validate_user_answer(user_id: str, body: AnswerValidation):
     try:
-        correct_answer = await get_correct_answer(body.problem_id)
+        correct_answer, title = await get_correct_answer(body.problem_id)
         if not correct_answer:
             raise HTTPException(status_code=404, detail="Problem or answer not found")
 
-        is_correct, norm_user, norm_correct = validate_answer(
-            body.user_answer, correct_answer
+        is_correct, norm_user, norm_correct = await validate_answer(
+            body.user_answer, correct_answer, title
         )
 
         if is_correct:

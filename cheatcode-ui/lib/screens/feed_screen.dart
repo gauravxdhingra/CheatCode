@@ -43,6 +43,7 @@ class FeedScreen extends StatefulWidget {
 
 class _FeedScreenState extends State<FeedScreen> with TickerProviderStateMixin {
   final _controller = TextEditingController();
+  final _scrollController = ScrollController();
   final _stopwatch = Stopwatch();
   int _hintsRevealed = 0;
   bool _submitted = false;
@@ -90,6 +91,7 @@ class _FeedScreenState extends State<FeedScreen> with TickerProviderStateMixin {
   @override
   void dispose() {
     _controller.dispose();
+    _scrollController.dispose();
     _resultController.dispose();
     _slideController.dispose();
     _hintController.dispose();
@@ -321,6 +323,7 @@ class _FeedScreenState extends State<FeedScreen> with TickerProviderStateMixin {
               child: SlideTransition(
                 position: _slideAnim,
                 child: CustomScrollView(
+                  controller: _scrollController,
                   slivers: [
                     SliverToBoxAdapter(
                       child: Padding(
@@ -407,7 +410,32 @@ class _FeedScreenState extends State<FeedScreen> with TickerProviderStateMixin {
                               ],
                             ),
 
-                            const SizedBox(height: 20),
+                            // Problem statement
+                            if (problem.problemStatement.isNotEmpty) ...[
+                              const SizedBox(height: 16),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.dim,
+                                  border: Border(
+                                    left: BorderSide(
+                                      color: AppTheme.green.withOpacity(0.4),
+                                      width: 2,
+                                    ),
+                                  ),
+                                ),
+                                child: Text(
+                                  problem.problemStatement,
+                                  style: AppTheme.mono(
+                                    size: 12,
+                                    color: AppTheme.white.withOpacity(0.65),
+                                  ),
+                                ),
+                              ),
+                            ],
+
+                            const SizedBox(height: 16),
 
                             // Code block
                             Container(
@@ -465,9 +493,10 @@ class _FeedScreenState extends State<FeedScreen> with TickerProviderStateMixin {
                                   SingleChildScrollView(
                                     scrollDirection: Axis.horizontal,
                                     padding: const EdgeInsets.all(14),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                    child: IntrinsicWidth(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                       children: codeLines.map<Widget>((line) {
                                         if (line.isBlank) {
                                           final prefix = line.text
@@ -492,6 +521,7 @@ class _FeedScreenState extends State<FeedScreen> with TickerProviderStateMixin {
                                           ),
                                         );
                                       }).toList(),
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -501,7 +531,7 @@ class _FeedScreenState extends State<FeedScreen> with TickerProviderStateMixin {
                             const SizedBox(height: 20),
 
                             // Result
-                            if (_submitted)
+                            if (_submitted) ...[
                               ScaleTransition(
                                 scale: _resultScale,
                                 child: _ResultCard(
@@ -510,6 +540,34 @@ class _FeedScreenState extends State<FeedScreen> with TickerProviderStateMixin {
                                   explanation: problem.explanation,
                                 ),
                               ),
+                              const SizedBox(height: 10),
+                              // Scroll back to problem
+                              GestureDetector(
+                                onTap: () => _scrollController.animateTo(
+                                  0,
+                                  duration: const Duration(milliseconds: 400),
+                                  curve: Curves.easeOut,
+                                ),
+                                child: Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.dim,
+                                    border: Border.all(color: AppTheme.mid),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      '↑ review the problem',
+                                      style: AppTheme.mono(
+                                          size: 11,
+                                          color:
+                                              AppTheme.white.withOpacity(0.4)),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
 
                             if (!_submitted) ...[
                               // Hints row
