@@ -4,8 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/problem.dart';
 
 class ApiService {
-  // Change to your Mac's local IP
-  static const String baseUrl = 'http://192.168.0.199:8000';
+  // Local: http://YOUR_MAC_IP:8000
+  // Production: your Railway URL (https://...)
+  static const String baseUrl = 'https://cheatcode-production-498b.up.railway.app';
   static const String _cachedFeedKey = 'cached_feed';
   static const String _cacheTimestampKey = 'cache_timestamp';
   static const int _cacheDurationHours = 24;

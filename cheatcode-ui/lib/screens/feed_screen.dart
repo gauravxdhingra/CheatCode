@@ -853,6 +853,9 @@ class _InlineBlank extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final displayAnswer = selectedChoice ?? controller.text;
+    final screenWidth = MediaQuery.of(context).size.width;
+    // Input width = screen minus padding minus prefix estimate
+    final inputWidth = (screenWidth - 80).clamp(120.0, 260.0);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
@@ -866,9 +869,8 @@ class _InlineBlank extends StatelessWidget {
                     size: 12, color: AppTheme.white.withOpacity(0.65))),
           submitted
               ? Container(
-                  constraints: const BoxConstraints(minWidth: 80),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                  constraints: const BoxConstraints(minWidth: 80, maxWidth: 280),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                   decoration: BoxDecoration(
                     color: (correct ? AppTheme.green : AppTheme.red)
                         .withOpacity(0.15),
@@ -883,26 +885,28 @@ class _InlineBlank extends StatelessWidget {
                         size: 12,
                         color: correct ? AppTheme.green : AppTheme.red,
                         weight: FontWeight.bold),
+                    overflow: TextOverflow.visible,
                   ),
                 )
-              : Container(
-                  constraints:
-                      const BoxConstraints(minWidth: 100, maxWidth: 220),
-                  height: 26,
-                  decoration: BoxDecoration(
-                    color: AppTheme.green.withOpacity(0.05),
-                    border: Border(
-                      bottom: BorderSide(
-                          color: AppTheme.green.withOpacity(0.6), width: 1.5),
+              : SizedBox(
+                  width: inputWidth,
+                  height: 28,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: AppTheme.green.withOpacity(0.05),
+                      border: Border(
+                        bottom: BorderSide(
+                            color: AppTheme.green.withOpacity(0.6),
+                            width: 1.5),
+                      ),
                     ),
-                  ),
-                  child: IntrinsicWidth(
                     child: TextField(
                       controller: controller,
                       style: AppTheme.mono(
                           size: 12,
                           color: AppTheme.green,
                           weight: FontWeight.bold),
+                      scrollPhysics: const BouncingScrollPhysics(),
                       decoration: InputDecoration(
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.symmetric(
