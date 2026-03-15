@@ -1,4 +1,5 @@
 # !/usr/bin/zsh
-python -m venv .venv && source cheatcode-api/.venv/bin/activate
-pip install -r cheatcode-api/requirements.txt
-uvicorn main:app --reload
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+# uvicorn main:app --reload
+uvicorn main:app --reload --host 0.0.0.0 --port 8000

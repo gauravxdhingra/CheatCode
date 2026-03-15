@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import feed, progress, users
+from routers import feed, progress, users, answers
 
 app = FastAPI(
     title="cheatcode() API",
@@ -18,6 +18,7 @@ app.add_middleware(
 app.include_router(users.router)
 app.include_router(feed.router)
 app.include_router(progress.router)
+app.include_router(answers.router)
 
 
 @app.get("/health")

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class CodeLine {
   final String text;
   final bool isBlank;
@@ -10,9 +12,10 @@ class CodeLine {
   });
 
   factory CodeLine.fromJson(Map<String, dynamic> json) {
+    final isBlank = json['is_blank'];
     return CodeLine(
       text: json['text'] as String? ?? '',
-      isBlank: json['is_blank'] as bool? ?? false,
+      isBlank: isBlank == true || isBlank == 'true',
       blankAnswer: json['blank_answer'] as String?,
     );
   }
@@ -34,6 +37,7 @@ class Problem {
   final String optimisedComplexity;
   final int difficulty;
   final List<String> hints;
+  final List<String> wrongOptions;
 
   const Problem({
     required this.id,
@@ -51,9 +55,19 @@ class Problem {
     required this.optimisedComplexity,
     required this.difficulty,
     required this.hints,
+    this.wrongOptions = const [],
   });
 
   factory Problem.fromJson(Map<String, dynamic> json) {
+    List<dynamic> _parse(dynamic raw) {
+      if (raw == null) return [];
+      if (raw is List) return raw;
+      if (raw is String) {
+        try { return jsonDecode(raw) as List<dynamic>; } catch (_) { return []; }
+      }
+      return [];
+    }
+
     return Problem(
       id: json['id'] as String,
       title: json['title'] as String,
@@ -61,11 +75,8 @@ class Problem {
       companyBadge: json['company_badge'] as String,
       pattern: json['pattern'] as String,
       patternDescription: json['pattern_description'] as String? ?? '',
-      relatedPatterns: (json['related_patterns'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          [],
-      codeLines: (json['code_lines'] as List<dynamic>)
+      relatedPatterns: _parse(json['related_patterns']).map((e) => e as String).toList(),
+      codeLines: _parse(json['code_lines'])
           .map((e) => CodeLine.fromJson(e as Map<String, dynamic>))
           .toList(),
       explanation: json['explanation'] as String,
@@ -74,11 +85,22 @@ class Problem {
       bruteComplexity: json['brute_complexity'] as String,
       optimisedComplexity: json['optimised_complexity'] as String,
       difficulty: json['difficulty'] as int,
-      hints: (json['hints'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          [],
+      hints: _parse(json['hints']).map((e) => e as String).toList(),
+      wrongOptions: _parse(json['wrong_options']).map((e) => e as String).toList(),
     );
+  }
+
+  /// Returns [correct, wrong1, wrong2, wrong3] shuffled
+  List<String> get multipleChoiceOptions {
+    if (wrongOptions.isEmpty) return [];
+    final blank = codeLines.firstWhere(
+      (l) => l.isBlank,
+      orElse: () => const CodeLine(text: ''),
+    );
+    if (blank.blankAnswer == null) return [];
+    final options = [blank.blankAnswer!, ...wrongOptions.take(3)];
+    options.shuffle();
+    return options;
   }
 
   String get difficultyLabel =>

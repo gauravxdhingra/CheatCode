@@ -1,3 +1,4 @@
+from __future__ import annotations
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
@@ -39,6 +40,7 @@ class Problem(BaseModel):
     brute_complexity: str
     optimised_complexity: str
     related_patterns: list[str]
+    wrong_options: list[str] = []
 
 
 class FeedResponse(BaseModel):
@@ -49,8 +51,20 @@ class FeedResponse(BaseModel):
 class ProgressUpdate(BaseModel):
     problem_id: str
     status: ProblemStatus
-    time_to_solve: Optional[int] = None  # seconds
+    time_to_solve: Optional[int] = None
     hints_used: int = 0
+
+
+class AnswerValidation(BaseModel):
+    problem_id: str
+    user_answer: str
+
+
+class AnswerResult(BaseModel):
+    correct: bool
+    normalized_user: str
+    normalized_correct: str
+    message: str
 
 
 class StreakResponse(BaseModel):
@@ -65,3 +79,12 @@ class UserProfile(BaseModel):
     streak: int
     interview_date: Optional[str] = None
     created_at: str
+
+
+class SolvedProblem(BaseModel):
+    problem_id: str
+    title: str
+    company_badge: str
+    pattern: str
+    difficulty: int
+    solved_at: Optional[str] = None

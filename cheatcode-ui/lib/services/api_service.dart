@@ -4,10 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/problem.dart';
 
 class ApiService {
-  // Change this to your machine's IP when testing on physical device
-  // Use 10.0.2.2 for Android emulator, localhost for iOS simulator
-  static const String _baseUrl = 'http://localhost:8000';
-  static const String _userIdKey = 'user_id';
+  // Change to your Mac's local IP
+  static const String baseUrl = 'http://192.168.0.199:8000';
   static const String _cachedFeedKey = 'cached_feed';
   static const String _cacheTimestampKey = 'cache_timestamp';
   static const int _cacheDurationHours = 24;
@@ -16,20 +14,22 @@ class ApiService {
 
   static Future<String?> getSavedUserId() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_userIdKey);
+    return prefs.getString('user_id');
   }
 
   static Future<String> createUser({
     required String email,
     required String role,
+    String? name,
     String? interviewDate,
   }) async {
     final response = await http.post(
-      Uri.parse('$_baseUrl/users/'),
+      Uri.parse('$baseUrl/users/'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'email': email,
         'role': role,
+        if (name != null) 'name': name,
         if (interviewDate != null) 'interview_date': interviewDate,
       }),
     );
@@ -37,27 +37,37 @@ class ApiService {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       final userId = data['id'] as String;
-
-      // Save locally
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_userIdKey, userId);
-
+      await prefs.setString('user_id', userId);
       return userId;
+    }
+
+    if (response.statusCode == 409 || response.statusCode == 500) {
+      return await _getUserByEmail(email);
     }
 
     throw Exception('Failed to create user: ${response.body}');
   }
 
+  static Future<String> _getUserByEmail(String email) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/users/by-email/$email'),
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['id'] as String;
+    }
+    throw Exception('User not found');
+  }
+
   // ── Feed ──────────────────────────────────────────────────────────────────
 
   static Future<List<Problem>> getFeed(String userId) async {
-    // Check cache first
     final cached = await _getCachedFeed();
     if (cached != null) return cached;
 
-    // Fetch from API
     final response = await http.get(
-      Uri.parse('$_baseUrl/feed/$userId'),
+      Uri.parse('$baseUrl/feed/$userId'),
       headers: {'Content-Type': 'application/json'},
     );
 
@@ -66,10 +76,7 @@ class ApiService {
       final problems = (data['problems'] as List)
           .map((p) => Problem.fromJson(p))
           .toList();
-
-      // Cache it
       await _cacheFeed(response.body);
-
       return problems;
     }
 
@@ -80,33 +87,62 @@ class ApiService {
     final prefs = await SharedPreferences.getInstance();
     final timestamp = prefs.getInt(_cacheTimestampKey);
     final cached = prefs.getString(_cachedFeedKey);
-
     if (timestamp == null || cached == null) return null;
-
     final age = DateTime.now().millisecondsSinceEpoch - timestamp;
-    final maxAge = _cacheDurationHours * 60 * 60 * 1000;
-
-    if (age > maxAge) return null; // Cache expired
-
+    if (age > _cacheDurationHours * 60 * 60 * 1000) return null;
     final data = jsonDecode(cached);
-    return (data['problems'] as List)
-        .map((p) => Problem.fromJson(p))
-        .toList();
+    return (data['problems'] as List).map((p) => Problem.fromJson(p)).toList();
   }
 
   static Future<void> _cacheFeed(String rawJson) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_cachedFeedKey, rawJson);
-    await prefs.setInt(
-      _cacheTimestampKey,
-      DateTime.now().millisecondsSinceEpoch,
-    );
+    await prefs.setInt(_cacheTimestampKey, DateTime.now().millisecondsSinceEpoch);
   }
 
   static Future<void> clearFeedCache() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_cachedFeedKey);
     await prefs.remove(_cacheTimestampKey);
+  }
+
+  // ── Answer validation ─────────────────────────────────────────────────────
+
+  static Future<Map<String, dynamic>> validateAnswer({
+    required String userId,
+    required String problemId,
+    required String userAnswer,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/answers/$userId/validate'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'problem_id': problemId,
+        'user_answer': userAnswer,
+      }),
+    );
+
+    if (response.statusCode == 200) return jsonDecode(response.body);
+    throw Exception('Validation failed: ${response.body}');
+  }
+
+  // ── Solved today ──────────────────────────────────────────────────────────
+
+  static Future<List<dynamic>> getSolvedToday(String userId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/answers/$userId/solved-today'),
+    );
+    if (response.statusCode == 200) return jsonDecode(response.body);
+    return [];
+  }
+
+  static Future<void> markUnsolved({
+    required String userId,
+    required String problemId,
+  }) async {
+    await http.post(
+      Uri.parse('$baseUrl/answers/$userId/unsolved/$problemId'),
+    );
   }
 
   // ── Progress ──────────────────────────────────────────────────────────────
@@ -119,7 +155,7 @@ class ApiService {
     int hintsUsed = 0,
   }) async {
     await http.post(
-      Uri.parse('$_baseUrl/progress/$userId'),
+      Uri.parse('$baseUrl/progress/$userId'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'problem_id': problemId,
@@ -132,13 +168,9 @@ class ApiService {
 
   static Future<Map<String, dynamic>> getStreak(String userId) async {
     final response = await http.get(
-      Uri.parse('$_baseUrl/progress/$userId/streak'),
+      Uri.parse('$baseUrl/progress/$userId/streak'),
     );
-
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    }
-
+    if (response.statusCode == 200) return jsonDecode(response.body);
     return {'streak': 0, 'solved_today': 0};
   }
 }
