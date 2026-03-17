@@ -56,3 +56,4 @@ Thumbs.db
 *.freezed.dart
 coverage/
 cheatcode-ui/.vscode/launch.json
+cheatcode-ui/.env.release
