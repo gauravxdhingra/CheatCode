@@ -651,25 +651,30 @@ class _FeedScreenState extends State<FeedScreen> with TickerProviderStateMixin {
                               // Multiple choice options
                               if (_showMultiChoice) ...[
                                 const SizedBox(height: 12),
-                                ..._choices.map((choice) => GestureDetector(
-                                      onTap: () =>
-                                          _submitChoice(problem, blank, choice),
-                                      child: Container(
-                                        width: double.infinity,
-                                        margin:
-                                            const EdgeInsets.only(bottom: 8),
-                                        padding: const EdgeInsets.all(14),
-                                        decoration: BoxDecoration(
-                                          color: AppTheme.dim,
-                                          border: Border.all(
-                                              color: AppTheme.mid),
-                                        ),
-                                        child: Text(
-                                          choice,
-                                          style: AppTheme.mono(
-                                              size: 13,
-                                              color: AppTheme.white
-                                                  .withOpacity(0.8)),
+                                ..._choices.map((choice) => Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        onTap: () => _submitChoice(
+                                            problem, blank, choice),
+                                        splashColor:
+                                            AppTheme.green.withOpacity(0.08),
+                                        child: Container(
+                                          width: double.infinity,
+                                          margin: const EdgeInsets.only(
+                                              bottom: 8),
+                                          padding: const EdgeInsets.all(14),
+                                          decoration: BoxDecoration(
+                                            color: AppTheme.dim,
+                                            border: Border.all(
+                                                color: AppTheme.mid),
+                                          ),
+                                          child: Text(
+                                            choice,
+                                            style: AppTheme.mono(
+                                                size: 13,
+                                                color: AppTheme.white
+                                                    .withOpacity(0.8)),
+                                          ),
                                         ),
                                       ),
                                     )),
@@ -755,22 +760,25 @@ class _FeedScreenState extends State<FeedScreen> with TickerProviderStateMixin {
                               ),
                               const SizedBox(height: 24),
 
-                              GestureDetector(
-                                onTap: () {
-                                  provider.nextProblem();
-                                  _resetForNextProblem();
-                                },
-                                child: Container(
-                                  width: double.infinity,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 16),
-                                  color: AppTheme.green,
-                                  child: Center(
-                                    child: Text('NEXT PROBLEM →',
-                                        style: AppTheme.mono(
-                                            size: 13,
-                                            color: AppTheme.black,
-                                            weight: FontWeight.bold)),
+                              Material(
+                                color: AppTheme.green,
+                                child: InkWell(
+                                  onTap: () {
+                                    provider.nextProblem();
+                                    _resetForNextProblem();
+                                  },
+                                  splashColor: Colors.white.withOpacity(0.1),
+                                  child: Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 16),
+                                    child: Center(
+                                      child: Text('NEXT PROBLEM →',
+                                          style: AppTheme.mono(
+                                              size: 13,
+                                              color: AppTheme.black,
+                                              weight: FontWeight.bold)),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -993,41 +1001,46 @@ class _HintSection extends StatelessWidget {
 
         // Reveal button
         if (hintsRevealed < hints.length)
-          GestureDetector(
-            onTap: onReveal,
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppTheme.dim,
-                border: Border.all(color: AppTheme.mid),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('💡',
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onReveal,
+              splashColor: AppTheme.yellow.withOpacity(0.05),
+              highlightColor: AppTheme.yellow.withOpacity(0.03),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppTheme.dim,
+                  border: Border.all(color: AppTheme.mid),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('💡',
+                        style: TextStyle(
+                            fontSize: 14,
+                            color: AppTheme.yellow.withOpacity(
+                                hintsRevealed == 0 ? 1.0 : 0.6))),
+                    const SizedBox(width: 8),
+                    Text(
+                      hintsRevealed == 0
+                          ? 'Unlock hint  ${hintsRevealed + 1}/${hints.length}'
+                          : 'Unlock hint ${hintsRevealed + 1}/${hints.length}',
+                      style: AppTheme.mono(
+                          size: 11,
+                          color: AppTheme.white.withOpacity(
+                              hintsRevealed == 0 ? 0.6 : 0.4)),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '→',
                       style: TextStyle(
-                          fontSize: 14,
-                          color: AppTheme.yellow.withOpacity(
-                              hintsRevealed == 0 ? 1.0 : 0.6))),
-                  const SizedBox(width: 8),
-                  Text(
-                    hintsRevealed == 0
-                        ? 'Unlock hint  ${hintsRevealed + 1}/${hints.length}'
-                        : 'Unlock hint ${hintsRevealed + 1}/${hints.length}',
-                    style: AppTheme.mono(
-                        size: 11,
-                        color: AppTheme.white.withOpacity(
-                            hintsRevealed == 0 ? 0.6 : 0.4)),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '→',
-                    style: TextStyle(
-                        color: AppTheme.yellow.withOpacity(0.4),
-                        fontSize: 12),
-                  ),
-                ],
+                          color: AppTheme.yellow.withOpacity(0.4),
+                          fontSize: 12),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1194,22 +1207,27 @@ class _ExpandableSection extends StatelessWidget {
           color: AppTheme.dim, border: Border.all(color: AppTheme.mid)),
       child: Column(
         children: [
-          GestureDetector(
-            onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Row(
-                children: [
-                  Text(icon, style: const TextStyle(fontSize: 16)),
-                  const SizedBox(width: 10),
-                  Text(title,
-                      style: AppTheme.mono(
-                          size: 12, color: AppTheme.white.withOpacity(0.8))),
-                  const Spacer(),
-                  Text(expanded ? '▲' : '▼',
-                      style: AppTheme.mono(
-                          size: 10, color: AppTheme.white.withOpacity(0.3))),
-                ],
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap,
+              splashColor: AppTheme.green.withOpacity(0.05),
+              highlightColor: AppTheme.green.withOpacity(0.03),
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  children: [
+                    Text(icon, style: const TextStyle(fontSize: 16)),
+                    const SizedBox(width: 10),
+                    Text(title,
+                        style: AppTheme.mono(
+                            size: 12, color: AppTheme.white.withOpacity(0.8))),
+                    const Spacer(),
+                    Text(expanded ? '▲' : '▼',
+                        style: AppTheme.mono(
+                            size: 10, color: AppTheme.white.withOpacity(0.3))),
+                  ],
+                ),
               ),
             ),
           ),

@@ -77,6 +77,7 @@ class AppProvider extends ChangeNotifier {
         name: name ?? 'Engineer',
       );
       await loadFeed();
+      await _loadSolvedIds();
     } catch (e) {
       _errorMessage = e.toString();
       notifyListeners();
@@ -91,6 +92,16 @@ class AppProvider extends ChangeNotifier {
     await loadFeed();
     try {
       await refreshStreak();
+      await _loadSolvedIds();
+    } catch (_) {}
+  }
+
+  Future<void> _loadSolvedIds() async {
+    if (_userId == null) return;
+    try {
+      final ids = await ApiService.getSolvedIds(_userId!);
+      _solvedIds.addAll(ids);
+      notifyListeners();
     } catch (_) {}
   }
 

@@ -392,37 +392,79 @@ class _DryRunVisualizerState extends State<DryRunVisualizer>
 
                     const Spacer(),
 
-                    // Speed selector
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: AppTheme.mid),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: _speeds.keys.map((speed) {
-                          final selected = speed == _selectedSpeed;
-                          return GestureDetector(
-                            onTap: () =>
-                                setState(() => _selectedSpeed = speed),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 150),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 6),
-                              color: selected
-                                  ? AppTheme.green.withOpacity(0.15)
-                                  : Colors.transparent,
-                              child: Text(
-                                speed,
-                                style: AppTheme.mono(
-                                  size: 10,
-                                  color: selected
-                                      ? AppTheme.green
-                                      : AppTheme.white.withOpacity(0.35),
-                                ),
-                              ),
+                    // Speed dropdown
+                    Builder(
+                      builder: (btnContext) => GestureDetector(
+                        onTap: () async {
+                          final RenderBox button =
+                              btnContext.findRenderObject() as RenderBox;
+                          final RenderBox overlay = Overlay.of(btnContext)
+                              .context
+                              .findRenderObject()! as RenderBox;
+                          final RelativeRect position =
+                              RelativeRect.fromRect(
+                            Rect.fromPoints(
+                              button.localToGlobal(
+                                  button.size.bottomLeft(Offset.zero),
+                                  ancestor: overlay),
+                              button.localToGlobal(
+                                  button.size.bottomRight(Offset.zero),
+                                  ancestor: overlay),
                             ),
+                            Offset.zero & overlay.size,
                           );
-                        }).toList(),
+                          final result = await showMenu<String>(
+                            context: btnContext,
+                            color: AppTheme.dim,
+                            position: position,
+                            items: _speeds.keys.map((speed) {
+                              final selected = speed == _selectedSpeed;
+                              return PopupMenuItem<String>(
+                                value: speed,
+                                child: Text(
+                                  speed,
+                                  style: AppTheme.mono(
+                                    size: 12,
+                                    color: selected
+                                        ? AppTheme.green
+                                        : AppTheme.white.withOpacity(0.7),
+                                    weight: selected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          );
+                          if (result != null) {
+                            setState(() => _selectedSpeed = result);
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppTheme.dim,
+                            border: Border.all(color: AppTheme.mid),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                _selectedSpeed,
+                                style: AppTheme.mono(
+                                    size: 11, color: AppTheme.green),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '▾',
+                                style: TextStyle(
+                                    color: AppTheme.green.withOpacity(0.6),
+                                    fontSize: 10),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ],

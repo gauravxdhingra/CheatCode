@@ -201,4 +201,17 @@ class ApiService {
     if (response.statusCode == 200) return jsonDecode(response.body);
     return {'streak': 0, 'solved_today': 0};
   }
+
+  static Future<List<String>> getSolvedIds(String userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/progress/$userId/solved-ids'),
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        return List<String>.from(jsonDecode(response.body));
+      }
+    } catch (_) {}
+    return [];
+  }
 }

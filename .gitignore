@@ -55,3 +55,4 @@ Thumbs.db
 *.g.dart
 *.freezed.dart
 coverage/
+cheatcode-ui/.vscode/launch.json
