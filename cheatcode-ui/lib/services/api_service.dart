@@ -4,11 +4,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/problem.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://cheatcode-production-498b.up.railway.app';
+  // Configure via --dart-define=BASE_URL=https://...
+  // Falls back to Railway URL if not provided
+  static const String baseUrl = String.fromEnvironment(
+    'BASE_URL',
+    defaultValue: 'https://cheatcode-production-498b.up.railway.app',
+  );
 
   // Passed via --dart-define=API_KEY=xxx at build time
-  // Empty string in debug builds — key check is disabled on server in development
-  static const String _apiKey = String.fromEnvironment('API_KEY', defaultValue: '');
+  static const String _apiKey =
+      String.fromEnvironment('API_KEY', defaultValue: '');
 
   static Map<String, String> get _headers => {
     'Content-Type': 'application/json',

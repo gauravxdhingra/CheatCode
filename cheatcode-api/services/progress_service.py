@@ -2,7 +2,9 @@ from __future__ import annotations
 from datetime import date, timedelta
 from db.supabase import get_supabase
 from models.problem import ProblemStatus, StreakResponse
+import logging
 
+logger = logging.getLogger("cheatcode.progress")
 OWNED_THRESHOLD = 5
 
 
@@ -15,7 +17,20 @@ async def update_progress(
 ) -> None:
     db = get_supabase()
 
-    # Upsert user_problem_state
+    # Check if already solved — don't double count
+    existing_resp = (
+        db.table("user_problem_state")
+        .select("status")
+        .eq("user_id", user_id)
+        .eq("problem_id", problem_id)
+        .execute()
+    )
+    already_solved = (
+        existing_resp.data and
+        existing_resp.data[0].get("status") == "solved"
+    )
+
+    # Upsert state
     db.table("user_problem_state").upsert(
         {
             "user_id": user_id,
@@ -28,16 +43,18 @@ async def update_progress(
         on_conflict="user_id,problem_id",
     ).execute()
 
-    # If solved, update pattern progress
-    if status == ProblemStatus.solved:
+    # Only update streak + pattern if newly solved (not re-solved)
+    if status == ProblemStatus.solved and not already_solved:
+        logger.info(f"New solve user={user_id} problem={problem_id}")
         await _update_pattern_progress(user_id, problem_id)
         await update_streak(user_id)
+    elif status == ProblemStatus.solved and already_solved:
+        logger.info(f"Re-solve ignored user={user_id} problem={problem_id}")
 
 
 async def _update_pattern_progress(user_id: str, problem_id: str) -> None:
     db = get_supabase()
 
-    # Get problem's pattern_id
     problem_resp = (
         db.table("problems")
         .select("pattern_id")
@@ -45,9 +62,10 @@ async def _update_pattern_progress(user_id: str, problem_id: str) -> None:
         .single()
         .execute()
     )
-    pattern_id = problem_resp.data["pattern_id"]
+    pattern_id = problem_resp.data.get("pattern_id")
+    if not pattern_id:
+        return
 
-    # Fetch existing progress
     existing_resp = (
         db.table("user_pattern_progress")
         .select("*")
@@ -102,20 +120,16 @@ async def update_streak(user_id: str) -> StreakResponse:
     if last_active:
         last_date = date.fromisoformat(last_active)
         if last_date == today:
-            # Already active today — just increment solved count
             solved_today += 1
         elif last_date == today - timedelta(days=1):
-            # Consecutive day — extend streak
             current_streak += 1
             solved_today = 1
             message = f"🔥 {current_streak} day streak!"
         else:
-            # Streak broken
             current_streak = 1
             solved_today = 1
             message = "Streak reset. Start fresh."
     else:
-        # First time
         current_streak = 1
         solved_today = 1
         message = "First solve. Let's go."
@@ -137,7 +151,6 @@ async def update_streak(user_id: str) -> StreakResponse:
 
 async def get_pattern_progress(user_id: str) -> list[dict]:
     db = get_supabase()
-
     resp = (
         db.table("user_pattern_progress")
         .select("*, patterns(name, description)")
