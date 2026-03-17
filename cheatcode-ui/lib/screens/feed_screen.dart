@@ -570,6 +570,19 @@ class _FeedScreenState extends State<FeedScreen> with TickerProviderStateMixin {
                             ],
 
                             if (!_submitted) ...[
+                              // MCQ nudge
+                              if (_hintsRevealed == 0 && !_showMultiChoice)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 10),
+                                  child: Text(
+                                    "// not sure? tap 'options' for multiple choice",
+                                    style: AppTheme.mono(
+                                      size: 10,
+                                      color: AppTheme.white.withOpacity(0.2),
+                                    ),
+                                  ),
+                                ),
+
                               // Hints row
                               _HintSection(
                                 hints: problem.hints,
@@ -590,10 +603,10 @@ class _FeedScreenState extends State<FeedScreen> with TickerProviderStateMixin {
                                       duration:
                                           const Duration(milliseconds: 200),
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 14, vertical: 14),
+                                          horizontal: 12, vertical: 14),
                                       decoration: BoxDecoration(
                                         color: _showMultiChoice
-                                            ? AppTheme.green.withOpacity(0.12)
+                                            ? AppTheme.green.withOpacity(0.08)
                                             : AppTheme.dim,
                                         border: Border.all(
                                           color: _showMultiChoice
@@ -601,14 +614,31 @@ class _FeedScreenState extends State<FeedScreen> with TickerProviderStateMixin {
                                               : AppTheme.mid,
                                         ),
                                       ),
-                                      child: Text(
-                                        '⊞',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          color: _showMultiChoice
-                                              ? AppTheme.green
-                                              : AppTheme.white.withOpacity(0.4),
-                                        ),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            _showMultiChoice ? '✕' : '≡',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: _showMultiChoice
+                                                  ? AppTheme.green
+                                                  : AppTheme.white
+                                                      .withOpacity(0.5),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 3),
+                                          Text(
+                                            _showMultiChoice ? 'hide' : 'options',
+                                            style: AppTheme.mono(
+                                              size: 9,
+                                              color: _showMultiChoice
+                                                  ? AppTheme.green
+                                                  : AppTheme.white
+                                                      .withOpacity(0.35),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
