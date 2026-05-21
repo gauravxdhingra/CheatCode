@@ -5,10 +5,10 @@ import '../models/problem.dart';
 
 class ApiService {
   // Configure via --dart-define=BASE_URL=https://...
-  // Falls back to Railway URL if not provided
+  // Falls back to production Vercel URL if not provided
   static const String baseUrl = String.fromEnvironment(
     'BASE_URL',
-    defaultValue: 'https://cheatcode-production-498b.up.railway.app',
+    defaultValue: 'https://cheat-code-tau.vercel.app',
   );
 
   // Passed via --dart-define=API_KEY=xxx at build time
