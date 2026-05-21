@@ -1,6 +1,6 @@
 name: cheatcode
 description: Unfair advantage for technical interviews.
-version: 1.0.0+1
+version: 1.0.0+3
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -14,8 +14,8 @@ dependencies:
   google_fonts: ^6.1.0
   animated_text_kit: ^4.2.2
   google_sign_in: ^6.2.1
-  sign_in_with_apple: ^6.1.0
   http: ^1.6.0
+  flutter_native_splash: ^2.3.10
 
 dev_dependencies:
   flutter_test:
@@ -28,14 +28,18 @@ flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/icon/icon.png"
-  min_sdk_android: 21
 
 flutter_native_splash:
-  color: "#000000"
+  color: "#080808"
+  color_dark: "#080808"
   image: assets/icon/icon.png
   android_12:
-    color: "#000000"
+    color: "#080808"
+    color_dark: "#080808"
     image: assets/icon/icon.png
+  fullscreen: true
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/icon/

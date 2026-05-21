@@ -57,3 +57,4 @@ Thumbs.db
 coverage/
 cheatcode-ui/.vscode/launch.json
 .env.release
+upload_cert.pem

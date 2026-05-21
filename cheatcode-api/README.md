@@ -25,7 +25,7 @@ cheatcode() is the TikTok of Leetcode — short, focused coding challenges serve
 ```
 ┌─────────────────┐     HTTPS      ┌─────────────────┐     SQL      ┌──────────────┐
 │   Flutter App   │ ────────────▶  │  FastAPI Backend │ ──────────▶ │  Supabase    │
-│   (Android/iOS) │                │  (Railway)       │             │  (PostgreSQL)│
+│   (Android/iOS) │                │  (Vercel)        │             │  (PostgreSQL)│
 └─────────────────┘                └─────────────────┘             └──────────────┘
 ```
 
@@ -36,9 +36,9 @@ cheatcode() is the TikTok of Leetcode — short, focused coding challenges serve
 | Mobile | Flutter (Dart) |
 | Backend | Python FastAPI |
 | Database | Supabase (PostgreSQL) |
-| Hosting | Railway (backend) |
+| Hosting | Vercel (backend) |
 | Auth | Google Sign-In |
-| CI/CD | Railway auto-deploy on push |
+| CI/CD | Vercel auto-deploy on push |
 
 ---
 
@@ -181,7 +181,7 @@ flutter run
 
 **Important:** Update `baseUrl` in `lib/services/api_service.dart`:
 - Local testing: `http://YOUR_MAC_IP:8000` (find with `ipconfig getifaddr en0`)
-- Production: your Railway URL
+- Production: your Vercel URL
 
 For Android physical device, also ensure `AndroidManifest.xml` has:
 ```xml
@@ -202,17 +202,18 @@ android:usesCleartextTraffic="true"
 
 ## Deployment
 
-### Backend (Railway)
+### Backend (Vercel)
 
-1. Connect GitHub repo at [railway.app](https://railway.app)
-2. Set root directory to `cheatcode-api`
-3. Add environment variables:
+1. Create a new project at [vercel.com](https://vercel.com) from this repository.
+2. Set **Root Directory** to `cheatcode-api`.
+3. Set environment variables in Vercel:
    ```
    SUPABASE_URL=...
    SUPABASE_SERVICE_KEY=...
    APP_ENV=production
+   API_SECRET_KEY=...   # required by middleware in production
    ```
-4. Railway auto-deploys on every push to `main`
+4. Deploy. `vercel.json` routes all paths to the FastAPI ASGI app.
 
 ### Flutter
 

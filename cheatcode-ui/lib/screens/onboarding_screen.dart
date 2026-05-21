@@ -15,10 +15,10 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen>
     with TickerProviderStateMixin {
-  // Step 1 = sign in, Step 2 = pick role
   int _step = 1;
   UserRole? _selectedRole;
   bool _loading = false;
+  bool _isGuest = false;
   AuthResult? _authResult;
 
   late AnimationController _fadeController;
@@ -63,6 +63,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     ),
   ];
 
+  // ── Google Sign-In ────────────────────────────────────────────────────────
+
   Future<void> _handleGoogleSignIn() async {
     setState(() => _loading = true);
     try {
@@ -72,6 +74,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         return;
       }
       _authResult = result;
+      _isGuest = false;
       setState(() {
         _loading = false;
         _step = 2;
@@ -90,6 +93,21 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       }
     }
   }
+
+  // ── Guest Sign-In ─────────────────────────────────────────────────────────
+
+  Future<void> _handleGuestSignIn() async {
+    _isGuest = true;
+    _authResult = AuthResult(
+      email: 'guest@cheatcode.app',
+      name: 'Guest',
+      googleId: 'guest',
+    );
+    setState(() => _step = 2);
+    _fadeController.forward(from: 0);
+  }
+
+  // ── Proceed after role pick ───────────────────────────────────────────────
 
   Future<void> _proceed() async {
     if (_selectedRole == null || _loading || _authResult == null) return;
@@ -125,6 +143,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       }
     }
   }
+
+  // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -206,6 +226,21 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   ),
           ),
         ),
+
+        const SizedBox(height: 16),
+
+        // Guest button
+        GestureDetector(
+          onTap: _loading ? null : _handleGuestSignIn,
+          child: Center(
+            child: Text(
+              '// continue as guest',
+              style: AppTheme.mono(
+                  size: 11, color: AppTheme.white.withOpacity(0.2)),
+            ),
+          ),
+        ),
+
         const SizedBox(height: 16),
         Text(
           'By continuing you agree to our Terms of Service\nand Privacy Policy.',
@@ -218,12 +253,16 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   }
 
   Widget _buildRolePicker() {
+    final displayName = _isGuest
+        ? null
+        : _authResult?.name.split(' ').first;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 32),
-        if (_authResult != null) ...[
-          Text('Hey, ${_authResult!.name.split(' ').first} 👋',
+        if (displayName != null) ...[
+          Text('Hey, $displayName 👋',
               style: AppTheme.mono(
                   size: 14,
                   color: AppTheme.green,

@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'providers/app_provider.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/feed_screen.dart';
 import 'theme/app_theme.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
+  final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -54,20 +56,19 @@ class _AppEntryState extends State<_AppEntry> {
   Future<void> _restoreSession() async {
     final provider = context.read<AppProvider>();
     await provider.tryRestoreSession();
-    setState(() {
-      _checking = false;
-      _hasSession = provider.userId != null;
-    });
+    if (mounted) {
+      setState(() {
+        _checking = false;
+        _hasSession = provider.userId != null;
+      });
+    }
+    FlutterNativeSplash.remove();
   }
 
   @override
   Widget build(BuildContext context) {
     if (_checking) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(color: AppTheme.green),
-        ),
-      );
+      return const Scaffold(body: SizedBox.shrink());
     }
     return _hasSession ? const FeedScreen() : const OnboardingScreen();
   }
